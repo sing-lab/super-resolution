@@ -65,8 +65,8 @@ class SRGAN(SuperResolutionModelBase):
         images_save_folder: str,
         batch_size: int,
         learning_rate: float,
-        beta_loss: float,
-        from_checkpoint: Optional[str] = None,
+        from_checkpoint: Optional[str],
+        beta_loss: float = 0.001,
     ) -> None:
         """
         Train and save the final model.
@@ -91,10 +91,10 @@ class SRGAN(SuperResolutionModelBase):
             Batch size for training.
         learning_rate: float
             Learning rate used for training.
-        beta_loss: float
-            The coefficient to weight the adversarial loss in the perceptual loss.
         from_checkpoint: Optional[str]
             If provided, path to resume the training from previous checkpoint.
+        beta_loss: float
+            The coefficient to weight the adversarial loss in the perceptual loss.
         """
         # Create log file to monitor training and evaluation.
         writer = SummaryWriter(os.path.join("logs", experiment_name))
