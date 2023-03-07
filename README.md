@@ -26,9 +26,9 @@ different degradation to improve super resolution performances.
 
 ## Differences with original SRGAN paper
 
-In addition to the SRGAN paper, we added here when creating low resolution images from high resolution images:
-- random jpeg compression
-- random horizontal or vertical flip
+In addition to the SRGAN paper bicubic interpolation, we added here when creating low resolution images from high resolution images:
+- Random JPEG compression
+- Random horizontal or vertical flip
 
 To remove unpleasant checkerboarder artifacts from reconstructed images, we used ICNR initialization for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
@@ -37,10 +37,10 @@ subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.0293
 
 ![img.png](illustrations%2Fimg.png)
 
-Example of checkerboarder artifacts when no MSE loss is used on the perceptual loss
+*Example of checkerboarder artifacts when no MSE loss is used on the perceptual loss*
 
-# Loss
-SRRESNET is trained using MSE loss.
+## Loss
+SRRESNET is trained using only the **MSE loss**.
 
 MSE loss is not able to deal with high frequency content in the image, that resulted in producing overly smooth images.
 Therefore, the authors of the paper decided to  use loss of different VGG layers. This VGG loss is based on the ReLU activation layers of the pre-trained 19 layer VGG network
@@ -51,50 +51,52 @@ leads to unpleasant artifacts (checkerboarder artifacts) as well as color shifti
 each is inspired from [this article](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
 - **Generator adversarial loss**
 
-SRGAN discriminator loss is the adversarial loss.
+SRGAN discriminator loss is only the **adversarial loss**.
 
 # Requirements
 
-- Docker
+- Docker (if docker run)
+- Python, poetry (if local run)
 
 # Installation
 
-First, clone the projet.
+- Clone the projet
 
-Then, download trained models from [here](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing).
+- Download trained models from [here](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing)
 and add them into:
-- **[models/SRGAN](models/SRGAN)** folder for the SRGAN generator (`generator_epoch_71.torch`).
-- **[models/SRRESNET](models/SRRESNET)** folder for the SRResnet pretrained generator (`generator_epoch_204.torch`).
+  - **[models/SRGAN](models/SRGAN)** folder for the SRGAN generator (`generator_epoch_71.torch`)
+  - **[models/SRRESNET](models/SRRESNET)** folder for the SRResnet pretrained generator (`generator_epoch_204.torch`)
+
+- Install project requirements (if local run) with `poetry install`
 
 # Usage
+## A. Run the demo app
+You can run the project demo via multiple ways.
 
-# A. Run the demo
-You can run the demo of the project via multiple ways.
-
-## 1. Run demo app in docker container
+### 1. Run in a docker container
 
 - Install docker desktop.
 
-- In a terminal, in project root, run:
+- In a terminal, in the project root, run:
 
   `docker-compose run --service-ports --rm app`
 
 
-Then access the app [here](http://localhost:8000)
+Then access the demo app [here](http://localhost:8000)
 
 Note: url shown in the terminal won't work as it is relative to the Docker container it’s running in.
 
-## 2. Run demo app locally
+### 2. Run locally
 
 To run the app locally:
 
     poetry run streamlit run api/app/main.py
 
-To run on GPU, NVIDIA cuda driver must be installed.
+To use GPU, NVIDIA cuda driver must be installed.
 
 Predict the whole image in one run may lead to out of memory for big images. Prediction is then made tile by tile.
 
-# B. Run the project.
+## B. Run the full project.
 You can run the project **locally** or using **docker**.
 Project can be used to train, predict or test a model, using the correct **configuration file**.
 
@@ -110,7 +112,7 @@ convolutional layer kernel help reduce these artifacts.
 - We use also raw mse during SRGAN training (see [here](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf)) as
 only VGG loss and cause issues in colors (low contrast) and hard convergence.
 
-## Download dataset
+### Download dataset
 You need to download the **dataset** and put in under folders defined in the config files.
 Dataset is [COCO2017](https://cocodataset.org/#download):
   - 40.7K test images
@@ -144,30 +146,24 @@ default configs files.
 - Move all images from `image_SRF_4` to parent folder for each `BSD100`, `Set5`, `Set14`
 - Remove `image_SRF_2`, `image_SRF_3`, and `image_SRF_4` folder for each `BSD100`, `Set5`, `Set14`
 
-## Run locally
-- Install poetry:
-  `pip install poetry`
-
-- Install requirements:
-  `poetry install`
-
+### 1. Run locally
 - Create your configuration file in the [configs](configs) folder, or use one of the existing config file.
 
-- Run the project:
-  `poetry run super_resolution $config_path`
+- Run the project with `poetry run super_resolution $config_path`
 
 Example:
 - to train a model: `poetry run super_resolution configs/SRGAN/srgan_train_config.yml`
 
-Training can be monitored using tensorboard:
-
-  `poetry run tensorboard --logdir logs/$EXPERIMENT_NAME`
-
-- to test a model: #TODO
-- to predict using a model: #TODO
+  Training can be monitored using tensorboard: `poetry run tensorboard --logdir logs/$EXPERIMENT_NAME`
 
 
-## Run in a docker container
+- to test a model:`poetry run super_resolution configs/SRGAN/srgan_test_config.yml`
+
+
+- to predict using a model: `poetry run super_resolution configs/SRGAN/srgan_predict_config.yml`
+
+
+### 2. Run in a docker container
 To run the project via a docker container, set up a config file then:
 
 `docker-compose run main "$config_path"`
