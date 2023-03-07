@@ -1,21 +1,21 @@
 # super_resolution
 
-[![Tests](https://github.com/sing-lab/super_resolution/workflows/Tests/badge.svg)](https://github.com/sing-lab/super_resolution/actions?workflow=Tests)
+[![Tests](https://github.com/sing-lab/super-resolution/workflows/Tests/badge.svg)](https://github.com/sing-lab/super-resolution/actions?workflow=Tests)
 
-[![codecov](https://codecov.io/gh/sing-lab/super_resolution/branch/master/graph/badge.svg?token=1DDPH1JK1Q)](https://codecov.io/gh/sing-lab/super_resolution)
+[![codecov](https://codecov.io/gh/sing-lab/super-resolution/branch/master/graph/badge.svg?token=1DDPH1JK1Q)](https://codecov.io/gh/sing-lab/super-resolution)
 
 [![License](https://img.shields.io/pypi/l/cookiecutter-hypermodern-python-instance)][license]
 
-[![Read the documentation at https://super_resolution.readthedocs.io](https://readthedocs.org/projects/super_resolution/badge/?version=latest)][read the docs]
+[![Read the documentation at https://super-resolution.readthedocs.io](https://readthedocs.org/projects/super-resolution/badge/?version=latest)][read the docs]
 
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
 
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
 
-[read the docs]: https://super_resolution.readthedocs.io
+[read the docs]: https://super-resolution.readthedocs.io
 [pre-commit]: https://github.com/pre-commit/pre-commit
 [black]: https://github.com/psf/black
-[license]: https://github.com/sing-lab/super_resolution/blob/master/LICENSE.rst
+[license]: https://github.com/sing-lab/super-resolution/blob/master/LICENSE.rst
 
 # Preambule
 This repo is the python implementation of [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
