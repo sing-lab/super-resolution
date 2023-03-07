@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
     \
     # POETRY
     # https://python-poetry.org/docs/configuration/#using-environment-variables
-    POETRY_VERSION=1.4.0 \
+    POETRY_VERSION=1.2.1 \
     # Install poetry to this location
     POETRY_HOME="/opt/poetry" \
     # make poetry create the virtual environment in the project's root
