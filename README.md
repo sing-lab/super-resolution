@@ -30,14 +30,14 @@ In addition to the SRGAN paper bicubic interpolation, we added here when creatin
 - Random JPEG compression
 - Random horizontal or vertical flip
 
-To remove unpleasant checkerboarder artifacts from reconstructed images, we used ICNR initialization for the
+To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialization for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
 
 ## Illustrations
 
 ![img.png](illustrations%2Fimg.png)
 
-*Example of checkerboarder artifacts when no MSE loss is used on the perceptual loss*
+*Example of checkerboard artifacts when no MSE loss is used on the perceptual loss*
 
 ## Loss
 SRRESNET is trained using only the **MSE loss**.
