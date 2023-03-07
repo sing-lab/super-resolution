@@ -1,0 +1,25 @@
+# Configuration file for predicting with a SRGAN model.
+
+experiment_name: "SRGAN/predict_1"
+model_type: "SRGAN"
+weights_path: "models/SRGAN/generator_epoch_71.torch"  # Specify a path to load from a pretrained GENERATOR model (srresnet type).
+task: "predict" # in ('train', 'test', 'predict')
+force_cpu: False
+
+crop_type: "no_crop" # Allow to predict rectangle images.
+
+# Prediction using tiles:
+tile_batch_size: 4 # Allow to reduce memory usage using tiles predictions.
+batch_size: 1 # 1 size batches when using tiles.
+tile_size: 128
+tile_overlap: 10
+
+# Normal prediction (no tiles):
+#tile_batch_size: null
+#tile_size: null
+#tile_overlap: null
+#batch_size: 1
+
+paths:
+  test_set: ["data/raw/predict"]
+  test_images_save: ["data/processed/predict/"]

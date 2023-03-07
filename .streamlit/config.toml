@@ -1,0 +1,12 @@
+[server]
+port = 5000
+
+# Max size, in megabytes, for files uploaded with the file_uploader.
+maxUploadSize = 200
+
+# Max size, in megabytes, of messages that can be sent via the WebSocket connection.
+maxMessageSize = 1000
+
+[runner]
+# Handle script rerun requests immediately, rather than waiting for script execution to reach a yield point. Enabling this will make Streamlit much more responsive to user interaction, but it can lead to race conditions in apps that mutate session_state data outside of explicit session_state assignment statements.
+fastReruns = true

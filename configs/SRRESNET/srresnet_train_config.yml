@@ -1,0 +1,21 @@
+# Configuration file for training a SRRESNET model.
+
+experiment_name: "SRRESNET/train_1"
+model_type: "SRRESNET"
+weights_path: null  # Specify a path to load from a pretrained model
+task: "train" # in ('train', 'test', 'predict')
+
+train:
+  crop_size: 128
+
+paths:
+  model_save: "models/"
+  train_set: "data/raw/train"
+  val_set: "data/raw/val"
+  val_images_save: "data/processed/val/"
+  from_checkpoint: null
+
+hyperparameters:
+  batch_size: 128
+  epochs: 808
+  learning_rate: 0.0001

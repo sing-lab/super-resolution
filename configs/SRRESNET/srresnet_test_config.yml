@@ -1,0 +1,16 @@
+# Configuration file for testing a trained SRRESNET model.
+
+experiment_name: "SRRESNET/test_1"
+model_type: "SRRESNET"
+weights_path: "models/SRRESNET/generator_epoch_204.torch"  # Specify a path to load from a pretrained model
+task: "test" # in ('train', 'test', 'predict')
+
+paths:
+  test_set:
+    [
+      "tmp/rsnet",
+    ]
+  test_images_save:
+    [
+      "tmp/rsnet",
+    ]

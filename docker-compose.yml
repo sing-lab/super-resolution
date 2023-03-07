@@ -1,0 +1,48 @@
+version: "3.8"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: app.Dockerfile
+    command: > # Run demo app
+            sh -c "streamlit run app/main.py"
+    container_name: app
+    ports:
+      - "8000:5000" # mapping of <Host>:<Container> ports.  => http://localhost:8000/
+    ipc: host # Increase the shared memory size for the container
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  main:
+    build:
+      context: .
+      dockerfile: main.Dockerfile
+    volumes:  # Local_folder: Container_folder
+      - ./data:/data  # Dataset folder
+      - ./logs:/logs  # Experiment logs folder
+      - ./models:/models  # Models folder
+      - ./configs:/configs  # Models folder
+    ipc: host # Increase the shared memory size for the container
+    container_name: main_project
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+  test_gpu:
+    image: nvidia/cuda:11.3.0-base
+    command: nvidia-smi
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]

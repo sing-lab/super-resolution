@@ -1,0 +1,23 @@
+# Configuration file for training a SRGAN model with a pretrained generator model.
+
+experiment_name: "SRGAN/train_1"
+model_type: "SRGAN"
+weights_path: "models/SRRESNET/generator_epoch_204.torch"  # Specify a path to load from a pretrained SRRESNET model.
+task: "train" # in ('train', 'test', 'predict')
+
+train:
+  crop_size: 128
+
+paths:
+  model_save: "models/"
+  train_set: "data/raw/train"
+  val_set: "data/raw/val"
+  val_images_save: "data/processed/val/"
+  from_checkpoint: null  # If from checkpoint, we subtract from epochs the number of epochs already done.
+
+hyperparameters:
+  batch_size: 32
+  epochs: 50  # learning rate will be divided by 10 after 20 epochs automatically, as specified in the original article.
+  # Normal is 40 epochs for 32 batch size, we try 50 to remove checkerboarder artifacts
+  learning_rate: 0.0001
+  beta_loss: 0.001
