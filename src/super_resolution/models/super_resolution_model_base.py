@@ -25,6 +25,7 @@ class SuperResolutionModelBase(ABC):
         images_save_folder: str,
         batch_size: int,
         learning_rate: float,
+        from_checkpoint: Optional[str],
     ) -> None:
         """Define template for training method."""
 
@@ -33,7 +34,6 @@ class SuperResolutionModelBase(ABC):
         self,
         val_dataset: SuperResolutionData,
         epoch: int,
-        batch_size: int,
         images_save_folder: str,
     ) -> Tuple:
         """Define template for evaluation method."""

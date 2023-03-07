@@ -1,5 +1,5 @@
 """Test cases for the __main__ module."""
-from src import get_model_from_enum, ModelEnum
+from super_resolution.models.model_enum import get_model_from_enum, ModelEnum
 from super_resolution.models.SRGAN.model import SRGAN
 from super_resolution.models.SRResNet.model import SRResNet
 
