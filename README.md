@@ -20,18 +20,23 @@
 # Preambule
 This repo is the python implementation of [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
 
-SRGAN assumes an ideal bicubic downsampling kernel, which is different from real degradations. Other models such as
+SRGAN assumes an ideal **bicubic downsampling kernel**, which is different from real degradations. Other models such as
 [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219) or [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) use
-different degradation to improve super resolution performances.
+different degradations to improve super resolution performances.
 
 ## Differences with original SRGAN paper
 
-In addition to the SRGAN paper bicubic interpolation, we added here when creating low resolution images from high resolution images:
+In addition to the SRGAN bicubic interpolation, we added to generate low resolution images from high resolution images:
 - Random JPEG compression
 - Random horizontal or vertical flip
+-
+High resolution images are size 128x128 as it gives better result than 96x96.
 
 To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialization for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
+
+Finally, SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
+allows better reconstruced images: contrast is better and artifacts are removed.
 
 ## Illustrations
 
@@ -96,7 +101,7 @@ To use GPU, NVIDIA cuda driver must be installed.
 
 Predict the whole image in one run may lead to out of memory for big images. Prediction is then made tile by tile.
 
-## B. Run the full project.
+## B. Train, test or predict with the full project.
 You can run the project **locally** or using **docker**.
 Project can be used to train, predict or test a model, using the correct **configuration file**.
 
@@ -116,25 +121,28 @@ only VGG loss and cause issues in colors (low contrast) and hard convergence.
 You need to download the **dataset** and put in under folders defined in the config files.
 Dataset is [COCO2017](https://cocodataset.org/#download):
   - 40.7K test images
-  - 118K train
-  - 5000 val
+  - 118K train images
+  - 123K unlabeled images
+  - 5000 val images
 
-We use both train and test split to train the model, and use another test set to get performances.
+We use both train, unlabeled, and test split to train the model, and use another test set to get performances.
+Therefore the train set is made of 282K images and the validation set of 5K images.
 
-**Linux**:
+**Linux / WSL**:
 - Run `sudo apt-get install unzip`
 - Run `sh get_dataset.sh` in the terminal to automatically download and extract dataset in the folders defined in
 default configs files.
 
-**WSL**:
-- Run `cd /mnt/c/Users/{user_name}/{path_to_super_resolution_project}` in the terminal
-- Then you can run `sh get_dataset.sh` to automatically download and extract dataset in the folders defined in
-default configs files.
-
 **Windows**:
-- Download [eval](http://images.cocodataset.org/zips/eval2017.zip), [train](http://images.cocodataset.org/zips/train2017.zip) and [test](http://images.cocodataset.org/zips/test2017.zip).
-- Extract `train2017.zip` and `test2017.zip` into `data/raw/train`
-- Extract `val2017.zip` into `data/raw/val
+- Download each split:
+  - [eval](http://images.cocodataset.org/zips/val2017.zip)
+  - [train](http://images.cocodataset.org/zips/train2017.zip)
+  - [test](http://images.cocodataset.org/zips/test2017.zip)
+  - [unlabelled](http://images.cocodataset.org/zips/unlabeled2017.zip)
+
+
+- Extract `train2017.zip`, `unlabeled2017.zip` `test2017.zip` into `data/raw/train`
+- Extract `val2017.zip` into `data/raw/val`
 - Download [BSD100](https://figshare.com/ndownloader/files/38256840)
 - Download [Set5](https://figshare.com/ndownloader/files/38256852)
 - Download [Set14](https://figshare.com/ndownloader/files/38256855)

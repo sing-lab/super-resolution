@@ -218,20 +218,18 @@ class SuperResolutionData(Dataset):
                 )  # OSError: broken data stream when reading image file
             except (UnidentifiedImageError, OSError):
                 print(f"Image {image_path} is not a valid image file.")
+                self.images_path.remove(image_path)
                 if delete:
                     os.remove(image_path)
-                else:
-                    self.images_path.remove(image_path)
             else:
                 if self.crop_type == "random" and (
                     image.size[0] < self.crop_size or image.size[1] < self.crop_size
                 ):
                     print(f"Image {image_path} is too small for cropping {image.size}")
                     image.close()
+                    self.images_path.remove(image_path)
                     if delete:
                         os.remove(image_path)
-                    else:
-                        self.images_path.remove(image_path)
 
 
 def random_jpeg_compression(image: Image) -> Image:
@@ -248,7 +246,7 @@ def random_jpeg_compression(image: Image) -> Image:
     Image
         The compressed image.
     """
-    quality = randrange(10, 100)
+    quality = randrange(50, 100)
     output_stream = BytesIO()
     image.save(output_stream, "JPEG", quality=quality, optimize=True)
     output_stream.seek(0)
