@@ -12,10 +12,16 @@ unzip -d 'data/raw' $TMPFILE
 mv 'data/raw/train2017' 'data/raw/train'
 rm $TMPFILE
 
+wget http://images.cocodataset.org/zips/unlabeled2017.zip -O $TMPFILE
+unzip -d 'data/raw/' $TMPFILE
+mv data/raw/unlabeled2017/* 'data/raw/train'
+rm -r 'data/raw/unlabeled2017'
+rm $TMPFILE
+
 wget http://images.cocodataset.org/zips/test2017.zip -O $TMPFILE
 unzip -d 'data/raw/' $TMPFILE
-mv data/raw/test2017/* data/raw/train
-rm data/raw/test2017
+mv data/raw/test2017/* 'data/raw/train'
+rm -r 'data/raw/test2017'
 rm $TMPFILE
 
 wget http://images.cocodataset.org/zips/val2017.zip -O $TMPFILE
