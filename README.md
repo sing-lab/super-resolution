@@ -29,20 +29,26 @@ different degradations to improve super resolution performances.
 In addition to the SRGAN bicubic interpolation, we added to generate low resolution images from high resolution images:
 - Random JPEG compression
 - Random horizontal or vertical flip
--
+
+As stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
+Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
+drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
+which leads to lower results in PSNR.
+
 High resolution images are size 128x128 as it gives better result than 96x96.
 
 To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialization for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
 
 Finally, SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
-allows better reconstruced images: contrast is better and artifacts are removed.
+allows better reconstructed images: contrast is better and artifacts are removed.
 
 ## Illustrations
 
 ![img.png](illustrations%2Fimg.png)
 
 *Example of checkerboard artifacts when no MSE loss is used on the perceptual loss*
+
 
 ## Loss
 SRRESNET is trained using only the **MSE loss**.

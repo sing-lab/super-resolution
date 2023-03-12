@@ -54,11 +54,13 @@ def main(config_path: Path) -> None:  # noqa: max-complexity: 13
             image_folder=os.path.join(*config["paths"]["train_set"].split("/")),
             crop_size=config["train"]["crop_size"],
             crop_type="random",
+            jpeg_compression=config["jpeg_compression"],
         )
 
         val_dataset = SuperResolutionData(
             image_folder=os.path.join(*config["paths"]["val_set"].split("/")),
             crop_type="center",
+            jpeg_compression=False,
         )
 
         # Sanity check: remove incorrect files.
@@ -98,7 +100,9 @@ def main(config_path: Path) -> None:  # noqa: max-complexity: 13
             config["paths"]["test_set"], config["paths"]["test_images_save"]
         ):
             test_dataset = SuperResolutionData(
-                image_folder=image_folder, crop_type="center"
+                image_folder=image_folder,
+                crop_type="center",
+                jpeg_compression=False,
             )
 
             metrics = model.evaluate(
@@ -126,6 +130,7 @@ def main(config_path: Path) -> None:  # noqa: max-complexity: 13
             test_dataset = SuperResolutionData(
                 image_folder=image_folder,
                 crop_type=config["crop_type"],
+                jpeg_compression=False,
             )
 
             model.predict(

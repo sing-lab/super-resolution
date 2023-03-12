@@ -32,6 +32,7 @@ class SuperResolutionData(Dataset):
         self,
         image_folder: str,
         crop_type: str,
+        jpeg_compression: bool,
         crop_size: Optional[int] = None,
         scaling_factor: int = 4,
     ) -> None:
@@ -51,6 +52,8 @@ class SuperResolutionData(Dataset):
             The target size for high resolution images for train set. Test set: images are not cropped to a fixed size.
         scaling_factor: int
             The scaling factor to use when downscaling high resolution images into low resolution images.
+        jpeg_compression: bool
+            Whether to use random jpeg compression at train step on low resolution images, or not.
 
         Raises
         ------
@@ -83,6 +86,7 @@ class SuperResolutionData(Dataset):
         self.crop_size = crop_size
         self.crop_type = crop_type
         self.scaling_factor = scaling_factor
+        self.jpeg_compression = jpeg_compression
 
     def __getitem__(self, idx: int) -> Tuple[Tensor, Tensor]:
         """
@@ -131,40 +135,26 @@ class SuperResolutionData(Dataset):
         else:
             transform_hr = Compose([])
 
-        # 2. Downscale image to  make the Low Resolution image.
+        # 2. Downscale image to make the Low Resolution image.
         high_res_image = transform_hr(image)
         high_res_height, high_res_width = high_res_image.size
 
-        if (
-            self.crop_type == "random"
-        ):  # Jpeg compression only applied on training images.
-            transform_lr = Compose(
-                [
-                    Resize(
-                        (
-                            high_res_height // self.scaling_factor,
-                            high_res_width // self.scaling_factor,
-                        ),
-                        interpolation=InterpolationMode.BICUBIC,
+        transform_lr = Compose(
+            [
+                Resize(
+                    (
+                        high_res_height // self.scaling_factor,
+                        high_res_width // self.scaling_factor,
                     ),
-                    Lambda(
-                        random_jpeg_compression
-                    ),  # Random JPEG compression applied on LR PIL image.
-                ]
-            )
+                    interpolation=InterpolationMode.BICUBIC,
+                )
+            ]
+        )
 
-        else:
-            transform_lr = Compose(
-                [
-                    Resize(
-                        (
-                            high_res_height // self.scaling_factor,
-                            high_res_width // self.scaling_factor,
-                        ),
-                        interpolation=InterpolationMode.BICUBIC,
-                    ),
-                ]
-            )
+        # Random JPEG compression applied on LR PIL image, only applied on training images.
+        if self.crop_type == "random" and self.jpeg_compression:
+            transform_lr.transforms.append(Lambda(random_jpeg_compression))
+
         low_res_image = transform_lr(high_res_image)
 
         # Convert PIL image to torch tensor: swap axis from (H x W x C) to (C x H x W).

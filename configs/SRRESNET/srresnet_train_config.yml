@@ -4,6 +4,7 @@ experiment_name: "SRRESNET/train_1"
 model_type: "SRRESNET"
 weights_path: null  # Specify a path to load from a pretrained model
 task: "train" # in ('train', 'test', 'predict')
+jpeg_compression: false
 
 train:
   crop_size: 128
