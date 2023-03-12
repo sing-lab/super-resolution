@@ -17,10 +17,10 @@
 [black]: https://github.com/psf/black
 [license]: https://github.com/sing-lab/super-resolution/blob/master/LICENSE.rst
 
-# Preambule
+# 1. Preamble
 This repo is the python implementation of [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
 
-SRGAN assumes an ideal **bicubic downsampling kernel**, which is different from real degradations. Other models such as
+SRGAN assumes an ideal **bicubic down-sampling kernel**, which is different from real degradations. Other models such as
 [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219) or [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) use
 different degradations to improve super resolution performances.
 
@@ -30,25 +30,31 @@ In addition to the SRGAN bicubic interpolation, we added to generate low resolut
 - Random JPEG compression
 - Random horizontal or vertical flip
 
-As stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
+However, as stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
 Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
 drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
-which leads to lower results in PSNR.
+which leads to lower results in PSNR. It was then only used for experimentation.
 
 High resolution images are size 128x128 as it gives better result than 96x96.
 
-To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialization for the
+Pixel shuffle layer may produce **checkerboard artifacts**. A better initialisation of convolutional layer kernel help reduce these
+artifacts. To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialisation for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
 
 Finally, SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
-allows better reconstructed images: contrast is better and artifacts are removed.
+allows better reconstructed images: contrast is better and **batch normalization artifacts** are removed. Note that batch
+normalization artifacts occurred during experiments for `0.9*MSE + 0.1*0.006*VGG_loss`, but were not present for
+`0.9*MSE + 0.1*0.001*VGG_loss`. Therefore, VGG loss coefficient was set to `0.1 * 0.001`.
 
 ## Illustrations
 
-![img.png](illustrations%2Fimg.png)
+![checkerboard_artifacts.png](illustrations%2Fcheckerboard_artifacts.png)
 
 *Example of checkerboard artifacts when no MSE loss is used on the perceptual loss*
 
+![batch_norm_artifact.png](illustrations%2Fbatch_norm_artifact.png)
+
+*Example of batch normalization artifacts with VGG loss coefficient of `0.1*0.006`, explanations on [ESRGAN paper](https://arxiv.org/pdf/1809.00219.pdf).*
 
 ## Loss
 SRRESNET is trained using only the **MSE loss**.
@@ -57,34 +63,28 @@ MSE loss is not able to deal with high frequency content in the image, that resu
 Therefore, the authors of the paper decided to  use loss of different VGG layers. This VGG loss is based on the ReLU activation layers of the pre-trained 19 layer VGG network
 
 SRGAN generator loss is made of:
-- **Perceptual loss**: sum of the VGG loss (MSE on VGG space) and pixel loss (MSE loss on image space). VGG loss only
-leads to unpleasant artifacts (checkerboarder artifacts) as well as color shifting. Weights for
-each is inspired from [this article](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
+- **Perceptual loss**: `0.1*0.001*VGG_loss + 0.9*MSE`, the sum of the VGG loss (MSE on VGG space) and pixel loss (MSE loss on image space). VGG loss only
+leads to unpleasant artifacts (checkerboard artifacts) as well as color shifting. Weights for
+each are inspired from [this article](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
 - **Generator adversarial loss**
 
 SRGAN discriminator loss is only the **adversarial loss**.
 
-# Requirements
+# 2. Installation
 
-- Docker (if docker run)
-- Python, poetry (if local run)
+1. Clone the projet
 
-# Installation
-
-- Clone the projet
-
-- Download trained models from [here](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing)
+2. Download trained models from [here](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing)
 and add them into:
-  - **[models/SRGAN](models/SRGAN)** folder for the SRGAN generator (`generator_epoch_71.torch`)
-  - **[models/SRRESNET](models/SRRESNET)** folder for the SRResnet pretrained generator (`generator_epoch_204.torch`)
+   - **[models/SRGAN](models/SRGAN)** folder for the SRGAN generator (`generator_epoch_28.torch`)
+   - **[models/SRRESNET](models/SRRESNET)** folder for the SRResnet pretrained generator (`generator_epoch_204.torch`)
 
-- Install project requirements (if local run) with `poetry install`
+3. Project requirements can be installed with `poetry install`
 
-# Usage
-## A. Run the demo app
-You can run the project demo via multiple ways.
+# 3. Demo app
+You can run the project demo locally or using docker.
 
-### 1. Run in a docker container
+## Run in a docker container
 
 - Install docker desktop.
 
@@ -97,7 +97,7 @@ Then access the demo app [here](http://localhost:8000)
 
 Note: url shown in the terminal won't work as it is relative to the Docker container it’s running in.
 
-### 2. Run locally
+## Run locally
 
 To run the app locally:
 
@@ -105,34 +105,23 @@ To run the app locally:
 
 To use GPU, NVIDIA cuda driver must be installed.
 
-Predict the whole image in one run may lead to out of memory for big images. Prediction is then made tile by tile.
+Predict the whole image in one run may lead to out of memory for big images. Prediction is then made **tile by tile**.
 
-## B. Train, test or predict with the full project.
-You can run the project **locally** or using **docker**.
+# 4. Train, test or predict with the full project
+You can run the project locally or using docker.
 Project can be used to train, predict or test a model, using the correct **configuration file**.
 
-Notes about model training:
 
-- Training SRGAN may result in several artifacts in super resolved images.
-
-- Batch normalization cause unpleasant artifacts (https://arxiv.org/pdf/1809.00219.pdf)
-
-- Pixel shuffle layer make checkerboard artifacts. A better initialisation of
-convolutional layer kernel help reduce these artifacts.
-
-- We use also raw mse during SRGAN training (see [here](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf)) as
-only VGG loss and cause issues in colors (low contrast) and hard convergence.
-
-### Download dataset
-You need to download the **dataset** and put in under folders defined in the config files.
-Dataset is [COCO2017](https://cocodataset.org/#download):
+## Download dataset
+You need to download the dataset and put in under folders defined in the config files.
+Dataset is from [COCO2017](https://cocodataset.org/#download):
   - 40.7K test images
   - 118K train images
   - 123K unlabeled images
   - 5000 val images
 
 We use both train, unlabeled, and test split to train the model, and use another test set to get performances.
-Therefore the train set is made of 282K images and the validation set of 5K images.
+Therefore, the train set is made of 282K images and the validation set of 5K images.
 
 **Linux / WSL**:
 - Run `sudo apt-get install unzip`
@@ -144,7 +133,7 @@ default configs files.
   - [eval](http://images.cocodataset.org/zips/val2017.zip)
   - [train](http://images.cocodataset.org/zips/train2017.zip)
   - [test](http://images.cocodataset.org/zips/test2017.zip)
-  - [unlabelled](http://images.cocodataset.org/zips/unlabeled2017.zip)
+  - [unlabeled](http://images.cocodataset.org/zips/unlabeled2017.zip)
 
 
 - Extract `train2017.zip`, `unlabeled2017.zip` `test2017.zip` into `data/raw/train`
@@ -160,7 +149,7 @@ default configs files.
 - Move all images from `image_SRF_4` to parent folder for each `BSD100`, `Set5`, `Set14`
 - Remove `image_SRF_2`, `image_SRF_3`, and `image_SRF_4` folder for each `BSD100`, `Set5`, `Set14`
 
-### 1. Run locally
+## 1. Run locally
 - Create your configuration file in the [configs](configs) folder, or use one of the existing config file.
 
 - Run the project with `poetry run super_resolution $config_path`
@@ -177,7 +166,7 @@ Example:
 - to predict using a model: `poetry run super_resolution configs/SRGAN/srgan_predict_config.yml`
 
 
-### 2. Run in a docker container
+## 2. Run in a docker container
 To run the project via a docker container, set up a config file then:
 
 `docker-compose run main "$config_path"`
@@ -216,43 +205,54 @@ Note: it may require to install tensorboard first with `pip install tensorboard`
 
 Prediction can be done tile by tile to adapt to smaller GPU, cf [srgan_predict_config](configs/SRGAN/srgan_predict_config.yml)
 
-# Trained models
-
-SRRESNET model was trained on 204 epochs.
-SRGAN was trained on 90 epochs. After 25 epoch, lr was divided by 10.
-Epoch 71 gives the best results (around 300 000 iterations),
-based on empirical analysis of super resolved validation images at each epoch.
-
-Hyper-parameters used to trained models are the same as the ones in the default configuration files.
-Note that SRGAN was first trained on 50 epochs, then training was resumed using the last checkpoint for 40 more epochs.
-
-Checkpoint (containing discriminator) is also available to resume training for SRGAN, as well as training logs
-for SRGAN, compatible with tensorboard. To use it, download it and add its path in the srgan training configuration file.
-
-
-SRGAN training logs (also available on the [drive](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing))
-
-![img_2.png](illustrations%2Fimg_2.png)
-
-![img_3.png](illustrations%2Fimg_3.png)
-
 # Performances
+
+SRRESNET model was trained on 204 epochs on 158K images (COCO2017 unlabeled set was not used for SRRESNET training).
+
+SRGAN was trained on 30 epochs on 282K images. After 15 epoch, the learning rate was divided by 10.
+Epoch 29 (therefore checkpoint_28.torch, as indexes start at 0) gives the best results (around 250 000 iterations), based on empirical analysis of super resolved validation images at each epoch.
+
+Hyperparameters used to trained models are the same as the ones in the default configuration files.
+- `jpeg_compression` was not used for SRGAN training (cf Preamble section) as generator struggle to recover lost information. Empirically, it gave
+worst results (for SRGAN: PSNR ~ 23, SSIM ~ 0.60).
+- SRGAN perceptual loss `0.1*0.001*VGG_loss + 0.9*MSE` (cf Loss section).
+
+SRGAN checkpoint is [available](https://drive.google.com/drive/folders/160z6A1eE5ye-JjZcOljNUUA-1o95xTg3?usp=sharing) to resume training for SRGAN. To use it, download it and add its path in the srgan training configuration file.
+In addition, training logs for SRGAN are available (compatible with tensorboard).
+
+## Results
+Here are the results (with the paper's results in parantheses):
+
+|              |     PSNR      |      SSIM      ||     PSNR      |      SSIM      ||     PSNR      |      SSIM      |
+|:------------:|:-------------:|:--------------:|:-------------:|:--------------:|:-------------:|:--------------:|:---:|:---:|
+| **SRResNet** | 31.40 (32.05) | 0.895 (0.9019) || 27.98 (28.49) | 0.782 (0.8184) || 27.01 (27.58) | 0.741 (0.7620) |
+|  **SRGAN**   | 30.64 (29.40) | 0.870 (0.8472) || 26.91 (26.02) | 0.741 (0.7397) || 25.91 (25.16) | 0.692 (0.6688) |
+|              |   **Set5**    |    **Set5**    ||   **Set14**   |   **Set14**    ||  **BSD100**   |   **BSD100**   |
+
+
+## Illustrations
+
 From left to right: low resolution, super resolved an original image.
 
-SRGAN
-![epoch_71_image_500.png](illustrations%2FSRGAN%2Fepoch_71_image_500.png)
-![epoch_71_image_1000.png](illustrations%2FSRGAN%2Fepoch_71_image_1000.png)
-![epoch_71_image_1500.png](illustrations%2FSRGAN%2Fepoch_71_image_1500.png)
-![epoch_71_image_2000.png](illustrations%2FSRGAN%2Fepoch_71_image_2000.png)
-![epoch_71_image_2500.png](illustrations%2FSRGAN%2Fepoch_71_image_2500.png)
+SRGAN:
+![epoch_28_image_0.png](illustrations%2FSRGAN%2Fepoch_28_image_0.png)
+![epoch_28_image_500.png](illustrations%2FSRGAN%2Fepoch_28_image_500.png)
+![epoch_28_image_1500.png](illustrations%2FSRGAN%2Fepoch_28_image_1500.png)
+![epoch_28_image_2000.png](illustrations%2FSRGAN%2Fepoch_28_image_2000.png)
+![epoch_28_image_2500.png](illustrations%2FSRGAN%2Fepoch_28_image_2500.png)
 
-SRRESNET
+SRRESNET:
 ![epoch_1_image_0.png](illustrations%2FSRRESNET%2Fepoch_1_image_0.png)
 ![epoch_1_image_1.png](illustrations%2FSRRESNET%2Fepoch_1_image_1.png)
 ![epoch_1_image_2.png](illustrations%2FSRRESNET%2Fepoch_1_image_2.png)
 ![epoch_1_image_3.png](illustrations%2FSRRESNET%2Fepoch_1_image_3.png)
 ![epoch_1_image_4.png](illustrations%2FSRRESNET%2Fepoch_1_image_4.png)
 ![epoch_1_image_5.png](illustrations%2FSRRESNET%2Fepoch_1_image_5.png)
+
+
+![SRGAN_training.PNG](illustrations%2FSRGAN_training.PNG)
+
+*SRGAN training logs.*
 
 # Contributing
 

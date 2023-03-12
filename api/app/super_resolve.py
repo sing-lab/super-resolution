@@ -46,7 +46,7 @@ def get_prediction(image: Image) -> Image:
         raise FileNotFoundError("Model folder not found.")
 
     model_enum = ModelEnum["SRGAN"]
-    weight_path = model_path / Path("models/SRGAN/generator_epoch_71.torch")
+    weight_path = model_path / Path("models/SRGAN/generator_epoch_28.torch")
 
     # Only trained generator not discriminator.
     model = get_model_from_enum(model_type=model_enum, weights_path=weight_path)
@@ -60,6 +60,7 @@ def get_prediction(image: Image) -> Image:
             image_folder=dataset_folder,
             scaling_factor=4,
             crop_type="no_crop",
+            jpeg_compression=False,
         )
         try:
             print("Using GPU", flush=True)
