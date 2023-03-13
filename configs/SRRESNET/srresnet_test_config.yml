@@ -8,9 +8,13 @@ task: "test" # in ('train', 'test', 'predict')
 paths:
   test_set:
     [
-      "tmp/rsnet",
+      "data/raw/test/BSD100",
+      "data/raw/test/Set5",
+      "data/raw/test/Set14",
     ]
   test_images_save:
     [
-      "tmp/rsnet",
+      "data/processed/test/BSD100",
+      "data/processed/test/Set5",
+      "data/processed/test/Set14",
     ]

@@ -2,7 +2,7 @@
 
 experiment_name: "SRGAN/test_1"
 model_type: "SRGAN"
-weights_path: "models/SRGAN/generator_epoch_71.torch"  # Specify a path to load from a pretrained GENERATOR model (srresnet type).
+weights_path: "models/SRGAN/generator_epoch_28.torch"  # Specify a path to load from a pretrained GENERATOR model (srresnet type).
 task: "test" # in ('train', 'test', 'predict')
 
 paths:

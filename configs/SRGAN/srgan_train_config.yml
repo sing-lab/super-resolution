@@ -4,6 +4,7 @@ experiment_name: "SRGAN/train_1"
 model_type: "SRGAN"
 weights_path: "models/SRRESNET/generator_epoch_204.torch"  # Specify a path to load from a pretrained SRRESNET model.
 task: "train" # in ('train', 'test', 'predict')
+jpeg_compression: false
 
 train:
   crop_size: 128
@@ -17,7 +18,7 @@ paths:
 
 hyperparameters:
   batch_size: 32
-  epochs: 50  # learning rate will be divided by 10 after 20 epochs automatically, as specified in the original article.
-  # Normal is 40 epochs for 32 batch size, we try 50 to remove checkerboarder artifacts
+  epochs: 30  # Learning rate will be divided by 10 after half epochs automatically, as specified in the original article.
+  # 200000 iterations is 24 epochs for 32 batch size.
   learning_rate: 0.0001
   beta_loss: 0.001
