@@ -1,4 +1,4 @@
-# super_resolution
+# Super resolution project
 
 [![Tests](https://github.com/sing-lab/super-resolution/workflows/Tests/badge.svg)](https://github.com/sing-lab/super-resolution/actions?workflow=Tests)
 
@@ -17,60 +17,69 @@
 [black]: https://github.com/psf/black
 [license]: https://github.com/sing-lab/super-resolution/blob/master/LICENSE.rst
 
-# 1. Preamble
+# Table of contents
+
+[**Preamble**](https://github.com/sing-lab/super-resolution#1-preamble)
+
+[**Differences with SRGAN paper**](https://github.com/sing-lab/super-resolution#differences-with-srgan-paper)
+
+[**Installation**](https://github.com/sing-lab/super-resolution#installation)
+
+[**Demo app**](https://github.com/sing-lab/super-resolution#demo-app)
+
+[**Train, test or predict with the full project**](https://github.com/sing-lab/super-resolution#train-test-or-predict-with-the-full-project)
+
+[**Performances**](https://github.com/sing-lab/super-resolution#performances)
+
+
+# Preamble
 This repo is the python implementation of [Photo-Realistic Single Image Super-Resolution Using a Generative Adversarial Network](https://arxiv.org/abs/1609.04802).
 
 SRGAN assumes an ideal **bicubic down-sampling kernel**, which is different from real degradations. Other models such as
 [ESRGAN: Enhanced Super-Resolution Generative Adversarial Networks](https://arxiv.org/abs/1809.00219) or [Real-ESRGAN: Training Real-World Blind Super-Resolution with Pure Synthetic Data](https://arxiv.org/abs/2107.10833) use
 different degradations to improve super resolution performances.
 
-## Differences with original SRGAN paper
+SRRESNET is trained using only the MSE loss. However, the MSE is not able to deal with high frequency content in the image, that resulted in producing overly smooth images.
+Therefore, the authors of the paper decided to use loss of different VGG layers. This VGG loss is based on the ReLU activation layers of the pre-trained 19 layer VGG network.
 
-In addition to the SRGAN bicubic interpolation, we added to generate low resolution images from high resolution images:
-- Random JPEG compression
-- Random horizontal or vertical flip
+SRGAN generator loss is made of the **perceptual loss** which is a weighted sum of the MSE and VGG loss, and of the generator **adversarial loss**.
+SRGAN discriminator loss is only the **adversarial loss**.
 
-However, as stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
-Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
-drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
-which leads to lower results in PSNR. It was then only used for experimentation.
+# Differences with SRGAN paper
 
-High resolution images are size 128x128 as it gives better result than 96x96.
+1. Low resolution image: in addition to the SRGAN bicubic interpolation when processing high resolution to low resolution images, we added:
+   - Random JPEG compression
+   - Random horizontal or vertical flip
 
-Pixel shuffle layer may produce **checkerboard artifacts**. A better initialisation of convolutional layer kernel help reduce these
+  However, as stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
+  Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
+  drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
+  which leads to lower results in PSNR. It was then only used for experimentation but is available in the configuration files.
+
+2. High resolution image size: we use a size of 128x128 to train the model as it gives better result than 96x96.
+
+
+3. Dataset: we use images from [COCO2017](https://cocodataset.org/#home) dataset as they are easier to get than the ImageNET dataset.
+
+
+4. Artifacts: pixel shuffle layer may produce **checkerboard artifacts**. A better initialisation of convolutional layer kernel help reduce these
 artifacts. To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialisation for the
 subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
 
-Finally, SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
-allows better reconstructed images: contrast is better and **batch normalization artifacts** are removed. Note that batch
+
+5. Loss: our SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
+allows better reconstructed images: contrast is better, colour are not shifting, and **batch normalization artifacts** are removed. Note that batch
 normalization artifacts occurred during experiments for `0.9*MSE + 0.1*0.006*VGG_loss`, but were not present for
-`0.9*MSE + 0.1*0.001*VGG_loss`. Therefore, VGG loss coefficient was set to `0.1 * 0.001`.
+`0.9*MSE + 0.1*0.001*VGG_loss`. Therefore, VGG loss coefficient was set to `0.1 * 0.001`. Weights for MSE and VGG in the perceptual loss
+are also inspired from [Weighted SRGAN and Reconstruction Loss Analysis for Accurate Image Super Resolution](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
 
-## Illustrations
 
-![checkerboard_artifacts.png](illustrations%2Fcheckerboard_artifacts.png)
+| *Checkerboard artifacts when no MSE loss is used on the perceptual loss* | *Batch normalization artifacts with VGG loss coefficient of 0.1\*0.006, explanations on [ESRGAN paper](https://arxiv.org/pdf/1809.00219.pdf)* |
+|:------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------:|
+|  <img src="illustrations/checkerboard_artifacts.png" alt= “” width=300>  | <img src="illustrations/batch_norm_artifact.png" alt= “” width=300>
 
-*Example of checkerboard artifacts when no MSE loss is used on the perceptual loss*
 
-![batch_norm_artifact.png](illustrations%2Fbatch_norm_artifact.png)
-
-*Example of batch normalization artifacts with VGG loss coefficient of `0.1*0.006`, explanations on [ESRGAN paper](https://arxiv.org/pdf/1809.00219.pdf).*
-
-## Loss
-SRRESNET is trained using only the **MSE loss**.
-
-MSE loss is not able to deal with high frequency content in the image, that resulted in producing overly smooth images.
-Therefore, the authors of the paper decided to  use loss of different VGG layers. This VGG loss is based on the ReLU activation layers of the pre-trained 19 layer VGG network
-
-SRGAN generator loss is made of:
-- **Perceptual loss**: `0.1*0.001*VGG_loss + 0.9*MSE`, the sum of the VGG loss (MSE on VGG space) and pixel loss (MSE loss on image space). VGG loss only
-leads to unpleasant artifacts (checkerboard artifacts) as well as color shifting. Weights for
-each are inspired from [this article](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
-- **Generator adversarial loss**
-
-SRGAN discriminator loss is only the **adversarial loss**.
-
-# 2. Installation
+# Installation
 
 1. Clone the projet
 
@@ -81,36 +90,21 @@ and add them into:
 
 3. Project requirements can be installed with `poetry install`
 
-# 3. Demo app
+# Demo app
 You can run the project demo locally or using docker.
 
-## Run in a docker container
+1. In a **container** with `docker-compose run --service-ports --rm app` (in the project root), then access the demo app [here](http://localhost:8000).
 
-- Install docker desktop.
+2. **Locally** with `poetry run streamlit run api/app/main.py`
 
-- In a terminal, in the project root, run:
+Notes:
+- To use GPU, NVIDIA cuda driver must be installed.
+- Predict the whole image in one run may lead to out of memory for big images. Prediction is then made **tile by tile**.
+- In a container, the url shown in the terminal won't work as it is relative to the Docker container it’s running in.
 
-  `docker-compose run --service-ports --rm app`
+# Train, test or predict with the full project
 
-
-Then access the demo app [here](http://localhost:8000)
-
-Note: url shown in the terminal won't work as it is relative to the Docker container it’s running in.
-
-## Run locally
-
-To run the app locally:
-
-    poetry run streamlit run api/app/main.py
-
-To use GPU, NVIDIA cuda driver must be installed.
-
-Predict the whole image in one run may lead to out of memory for big images. Prediction is then made **tile by tile**.
-
-# 4. Train, test or predict with the full project
-You can run the project locally or using docker.
-Project can be used to train, predict or test a model, using the correct **configuration file**.
-
+This repo can be used to train, predict or test a model, using the correct **configuration file**: create your configuration file in the [configs](configs) folder, or use one of the existing config file.
 
 ## Download dataset
 You need to download the dataset and put in under folders defined in the config files.
@@ -129,54 +123,27 @@ Therefore, the train set is made of 282K images and the validation set of 5K ima
 default configs files.
 
 **Windows**:
-- Download each split:
-  - [eval](http://images.cocodataset.org/zips/val2017.zip)
-  - [train](http://images.cocodataset.org/zips/train2017.zip)
-  - [test](http://images.cocodataset.org/zips/test2017.zip)
-  - [unlabeled](http://images.cocodataset.org/zips/unlabeled2017.zip)
-
-
+- Download each split: [eval](http://images.cocodataset.org/zips/val2017.zip) [train](http://images.cocodataset.org/zips/train2017.zip) [test](http://images.cocodataset.org/zips/test2017.zip) [unlabeled](http://images.cocodataset.org/zips/unlabeled2017.zip)
 - Extract `train2017.zip`, `unlabeled2017.zip` `test2017.zip` into `data/raw/train`
 - Extract `val2017.zip` into `data/raw/val`
-- Download [BSD100](https://figshare.com/ndownloader/files/38256840)
-- Download [Set5](https://figshare.com/ndownloader/files/38256852)
-- Download [Set14](https://figshare.com/ndownloader/files/38256855)
-- Extract the 3 zip folders into `data/raw/test`
-- Remove all images containing 'LR' from
-  - `data/raw/test/BSD100/image_SRF_4`
-  - `data/raw/test/Set5/image_SRF_4`
-  - `data/raw/test/Set14/image_SRF_4`
-- Move all images from `image_SRF_4` to parent folder for each `BSD100`, `Set5`, `Set14`
-- Remove `image_SRF_2`, `image_SRF_3`, and `image_SRF_4` folder for each `BSD100`, `Set5`, `Set14`
+- Download from the [drive](https://drive.google.com/drive/folders/1ZVvIzbXdx5wmSs5QY74RNMY0Rx--yYUI?usp=share_link) the test images
+- Extract the `test` folder into `data/raw/test`
 
-## 1. Run locally
-- Create your configuration file in the [configs](configs) folder, or use one of the existing config file.
+## Run the project
+You can run the project locally or using docker.
 
-- Run the project with `poetry run super_resolution $config_path`
+1. In a **container** with `docker-compose run main "$config_path"` (in the project root).
 
-Example:
-- to train a model: `poetry run super_resolution configs/SRGAN/srgan_train_config.yml`
-
-  Training can be monitored using tensorboard: `poetry run tensorboard --logdir logs/$EXPERIMENT_NAME`
-
-
-- to test a model:`poetry run super_resolution configs/SRGAN/srgan_test_config.yml`
-
-
-- to predict using a model: `poetry run super_resolution configs/SRGAN/srgan_predict_config.yml`
-
-
-## 2. Run in a docker container
-To run the project via a docker container, set up a config file then:
-
-`docker-compose run main "$config_path"`
+2. **Locally** with `poetry run super_resolution $config_path`
 
 Examples:
 1. To train a model:
 
-`docker-compose run --rm main "configs/SRGAN/srgan_train_config.yml"`
+`docker-compose run --rm main configs/SRGAN/srgan_train_config.yml`
 
-After training is done, you can find:
+`poetry run super_resolution configs/SRGAN/srgan_train_config.yml`
+
+After the training completed, you can find:
 - logs at `logs/SRGAN/$EXPERIMENT_NAME`
 - models at `models/SRGAN/$EXPERIMENT_NAME`
 - images at `data/processed/val/SRGAN/$EXPERIMENT_NAME`
@@ -184,13 +151,14 @@ After training is done, you can find:
 Or in the directory specified in the `config_file` you used.
 
 Training can be then monitored with:
-`tensorboard --logdir=logs/$EXPERIMENT_NAME`
+`poetry run tensorboard --logdir logs/$EXPERIMENT_NAME`
 
-Note: it may require to install tensorboard first with `pip install tensorboard`
 
 2. To test a model and get performances:
 
-`docker-compose run --rm main "configs/SRGAN/srgan_test_config.yml"`
+`docker-compose run --rm main configs/SRGAN/srgan_test_config.yml`
+
+`poetry run super_resolution configs/SRGAN/srgan_test_config.yml`
 
 - Test data must exist in the location specified in the config file.
 - Predicted data will be saved in the location specified in the config file.
@@ -198,12 +166,15 @@ Note: it may require to install tensorboard first with `pip install tensorboard`
 
 3. To super-resolve images using a model:
 
-`docker-compose run --rm main "configs/SRGAN/srgan_predict_config.yml"`
+`docker-compose run --rm main configs/SRGAN/srgan_predict_config.yml`
+
+`poetry run super_resolution configs/SRGAN/srgan_predict_config.yml`
 
 - Input data must exist in the location specified in the config file.
 - Predicted data will be saved in the location specified in the config file.
 
 Prediction can be done tile by tile to adapt to smaller GPU, cf [srgan_predict_config](configs/SRGAN/srgan_predict_config.yml)
+
 
 # Performances
 
