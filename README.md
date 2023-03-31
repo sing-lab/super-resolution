@@ -1,15 +1,10 @@
 # Super resolution project
 
 [![Tests](https://github.com/sing-lab/super-resolution/workflows/Tests/badge.svg)](https://github.com/sing-lab/super-resolution/actions?workflow=Tests)
-
 [![codecov](https://codecov.io/gh/sing-lab/super-resolution/branch/master/graph/badge.svg?token=1DDPH1JK1Q)](https://codecov.io/gh/sing-lab/super-resolution)
-
 [![License](https://img.shields.io/pypi/l/cookiecutter-hypermodern-python-instance)][license]
-
 [![Read the documentation at https://super-resolution.readthedocs.io](https://readthedocs.org/projects/super-resolution/badge/?version=latest)][read the docs]
-
 [![Black](https://img.shields.io/badge/code%20style-black-000000.svg)][black]
-
 [![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)][pre-commit]
 
 [read the docs]: https://super-resolution.readthedocs.io
@@ -21,8 +16,6 @@
 
 [**Preamble**](https://github.com/sing-lab/super-resolution#1-preamble)
 
-[**Differences with SRGAN paper**](https://github.com/sing-lab/super-resolution#differences-with-srgan-paper)
-
 [**Installation**](https://github.com/sing-lab/super-resolution#installation)
 
 [**Demo app**](https://github.com/sing-lab/super-resolution#demo-app)
@@ -30,6 +23,8 @@
 [**Train, test or predict with the full project**](https://github.com/sing-lab/super-resolution#train-test-or-predict-with-the-full-project)
 
 [**Performances**](https://github.com/sing-lab/super-resolution#performances)
+
+[**Differences with SRGAN paper**](https://github.com/sing-lab/super-resolution#differences-with-srgan-paper)
 
 
 # Preamble
@@ -45,38 +40,6 @@ Therefore, the authors of the paper decided to use loss of different VGG layers.
 SRGAN generator loss is made of the **perceptual loss** which is a weighted sum of the MSE and VGG loss, and of the generator **adversarial loss**.
 SRGAN discriminator loss is only the **adversarial loss**.
 
-# Differences with SRGAN paper
-
-1. Low resolution image: in addition to the SRGAN bicubic interpolation when processing high resolution to low resolution images, we added:
-   - Random JPEG compression
-   - Random horizontal or vertical flip
-
-  However, as stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
-  Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
-  drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
-  which leads to lower results in PSNR. It was then only used for experimentation but is available in the configuration files.
-
-2. High resolution image size: we use a size of 128x128 to train the model as it gives better result than 96x96.
-
-
-3. Dataset: we use images from [COCO2017](https://cocodataset.org/#home) dataset as they are easier to get than the ImageNET dataset.
-
-
-4. Artifacts: pixel shuffle layer may produce **checkerboard artifacts**. A better initialisation of convolutional layer kernel help reduce these
-artifacts. To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialisation for the
-subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
-
-
-5. Loss: our SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
-allows better reconstructed images: contrast is better, colour are not shifting, and **batch normalization artifacts** are removed. Note that batch
-normalization artifacts occurred during experiments for `0.9*MSE + 0.1*0.006*VGG_loss`, but were not present for
-`0.9*MSE + 0.1*0.001*VGG_loss`. Therefore, VGG loss coefficient was set to `0.1 * 0.001`. Weights for MSE and VGG in the perceptual loss
-are also inspired from [Weighted SRGAN and Reconstruction Loss Analysis for Accurate Image Super Resolution](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
-
-
-| *Checkerboard artifacts when no MSE loss is used on the perceptual loss* | *Batch normalization artifacts with VGG loss coefficient of 0.1\*0.006, explanations on [ESRGAN paper](https://arxiv.org/pdf/1809.00219.pdf)* |
-|:------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------:|
-|  <img src="illustrations/checkerboard_artifacts.png" alt= “” width=300>  | <img src="illustrations/batch_norm_artifact.png" alt= “” width=300>
 
 
 # Installation
@@ -107,8 +70,10 @@ Notes:
 This repo can be used to train, predict or test a model, using the correct **configuration file**: create your configuration file in the [configs](configs) folder, or use one of the existing config file.
 
 ## Download dataset
+
+On the SRGAN papers, authors used 300K images from ImageNET dataset. However, is it easier to download the [COCO2017](https://cocodataset.org/#download) dataset.
 You need to download the dataset and put in under folders defined in the config files.
-Dataset is from [COCO2017](https://cocodataset.org/#download):
+Dataset is from :
   - 40.7K test images
   - 118K train images
   - 123K unlabeled images
@@ -178,10 +143,10 @@ Prediction can be done tile by tile to adapt to smaller GPU, cf [srgan_predict_c
 
 # Performances
 
-SRRESNET model was trained on 204 epochs on 158K images (COCO2017 unlabeled set was not used for SRRESNET training).
+**SRRESNET** model was trained on 204 epochs.
 
-SRGAN was trained on 30 epochs on 282K images. After 15 epoch, the learning rate was divided by 10.
-Epoch 29 (therefore checkpoint_28.torch, as indexes start at 0) gives the best results (around 250 000 iterations), based on empirical analysis of super resolved validation images at each epoch.
+**SRGAN** was trained on 30 epochs. After 15 epoch, the learning rate was divided by 10.
+Epoch 29 gives the best results (around 250 000 iterations), based on empirical analysis of super resolved validation images at each epoch.
 
 Hyperparameters used to trained models are the same as the ones in the default configuration files.
 - `jpeg_compression` was not used for SRGAN training (cf Preamble section) as generator struggle to recover lost information. Empirically, it gave
@@ -224,6 +189,40 @@ SRRESNET:
 ![SRGAN_training.PNG](illustrations%2FSRGAN_training.PNG)
 
 *SRGAN training logs.*
+
+# Differences with SRGAN paper
+
+1. Low resolution image: in addition to the SRGAN bicubic interpolation when processing high resolution to low resolution images, we added:
+   - Random JPEG compression
+   - Random horizontal or vertical flip
+
+  However, as stated in [A Hybrid Approach Between Adversarial Generative Networks and Actor-Critic
+  Policy Gradient for Low Rate High-Resolution Image Compression](https://arxiv.org/abs/1906.04681) article, when using jpeg compression on low resolution images, the
+  drastic down-sampling of JPEG image causes loss of information, difficult to recover from the super resolution network,
+  which leads to lower results in PSNR. It was then only used for experimentation but is available in the configuration files.
+
+2. High resolution image size: we use a size of 128x128 to train the model as it gives better result than 96x96.
+
+
+3. Dataset: we use images from [COCO2017](https://cocodataset.org/#home) dataset as they are easier to get than the ImageNET dataset.
+
+
+4. Artifacts: pixel shuffle layer may produce **checkerboard artifacts**. A better initialisation of convolutional layer kernel help reduce these
+artifacts. To remove unpleasant checkerboard artifacts from reconstructed images, we used ICNR initialisation for the
+subpixel convolutional block, see [this article](https://arxiv.org/abs/1707.02937).
+
+
+5. Loss: our SRGAN loss contains both MSE and VGG loss where in the paper only the VGG loss is used. Using the MSE
+allows better reconstructed images: contrast is better, colour are not shifting, and **batch normalization artifacts** are removed. Note that batch
+normalization artifacts occurred during experiments for `0.9*MSE + 0.1*0.006*VGG_loss`, but were not present for
+`0.9*MSE + 0.1*0.001*VGG_loss`. Therefore, VGG loss coefficient was set to `0.1 * 0.001`. Weights for MSE and VGG in the perceptual loss
+are also inspired from [Weighted SRGAN and Reconstruction Loss Analysis for Accurate Image Super Resolution](https://iopscience.iop.org/article/10.1088/1742-6596/1903/1/012050/pdf).
+
+
+| *Checkerboard artifacts when no MSE loss is used on the perceptual loss* | *Batch normalization artifacts with VGG loss coefficient of 0.1\*0.006, explanations on [ESRGAN paper](https://arxiv.org/pdf/1809.00219.pdf)* |
+|:------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------------------------------------:|
+|  <img src="illustrations/checkerboard_artifacts.png" alt= “” width=300>  | <img src="illustrations/batch_norm_artifact.png" alt= “” width=300>
+
 
 # Contributing
 
