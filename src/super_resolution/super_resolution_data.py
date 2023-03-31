@@ -137,7 +137,7 @@ class SuperResolutionData(Dataset):
 
         # 2. Downscale image to make the Low Resolution image.
         high_res_image = transform_hr(image)
-        high_res_height, high_res_width = high_res_image.size
+        high_res_width, high_res_height = high_res_image.size
 
         transform_lr = Compose(
             [
