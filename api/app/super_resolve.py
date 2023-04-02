@@ -17,7 +17,7 @@ Image.MAX_IMAGE_PIXELS = (
 )
 
 
-def get_prediction(image: Image) -> Image:
+def get_prediction(image: Image) -> str:
     """
     Perform super-resolution on a given image.
 
@@ -28,8 +28,8 @@ def get_prediction(image: Image) -> Image:
 
     Returns
     -------
-    Image
-        Super resolved image.
+    str
+        Path to saved super resolved image.
 
     Raises
     ------
@@ -68,10 +68,11 @@ def get_prediction(image: Image) -> Image:
                 test_dataset=dataset,
                 images_save_folder=images_save_folder,
                 force_cpu=False,
-                tile_batch_size=2,
+                tile_batch_size=8,
                 tile_size=128,
                 tile_overlap=10,
                 batch_size=1,
+                save_format="jpg",  # Smaller files than PNG and quality difference unnoticeable.
             )
         except (
             RuntimeError,
@@ -86,6 +87,7 @@ def get_prediction(image: Image) -> Image:
                 tile_size=128,
                 tile_overlap=10,
                 batch_size=1,
+                save_format="jpg",
             )
 
-    return Image.open(os.path.join(images_save_folder, "0.png"))
+    return os.path.join(images_save_folder, "0.jpg")
