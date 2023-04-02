@@ -12,7 +12,8 @@ from torch.nn import MSELoss
 from torch.optim import Adam
 from torch.utils.data import DataLoader
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms import CenterCrop, Compose, Resize
+from torchvision.transforms import Resize
+from torchvision.transforms.functional import get_image_size
 from torchvision.utils import make_grid, save_image
 
 from super_resolution.models.SRGAN.generator import Generator
@@ -275,9 +276,6 @@ class SRResNet(SuperResolutionModelBase):
 
         content_loss = MSELoss().to(device)
 
-        # No need for ToTensor as already a Tensor Batch * Channel * Height * Width
-        transform = Compose([Resize(400), CenterCrop(400)])
-
         data_loader = DataLoader(
             val_dataset,
             batch_size=1,  # Batch size is 1 as each image have a specific size.
@@ -301,20 +299,27 @@ class SRResNet(SuperResolutionModelBase):
                 loss = content_loss(sr_images, hr_images)  # MSE.
                 val_losses.append(loss)
 
+                # Scaled into [0, 1]
+                sr_images = (sr_images + 1.0) / 2.0
+                hr_images = (hr_images + 1.0) / 2.0
+
                 # Save images.
                 if images_save_folder and (
                     total_batch <= 10 or i_batch % (total_batch // 10) == 0
                 ):
                     for i in range(sr_images.size(0)):
-                        # Each image is scaled into [0, 1]
+                        # No need for ToTensor as already a Tensor Batch * Channel * Height * Width
+                        # Resize to hr size as shrinking with resize could decrease images quality.
+                        hr_width, hr_height = get_image_size(hr_images)
                         images = torch.stack(
                             [
-                                transform(lr_images[i, :, :, :]),
-                                transform((sr_images[i, :, :, :] + 1.0) / 2.0),
-                                transform((hr_images[i, :, :, :] + 1.0) / 2.0),
+                                Resize(hr_width)(lr_images[i, :, :, :]),
+                                Resize(hr_width)(sr_images[i, :, :, :]),
+                                Resize(hr_width)(hr_images[i, :, :, :]),
                             ]
                         )
                         grid = make_grid(images, nrow=3, padding=5)
+                        # Saving a grid for image comparison.
                         save_image(
                             grid,
                             os.path.join(
@@ -324,9 +329,9 @@ class SRResNet(SuperResolutionModelBase):
                             padding=5,
                         )
 
-                        # Saving also full super resolved image
+                        # Saving also full super resolved image as resize for visualisation can deteriorate quality.
                         save_image(
-                            images[1],
+                            sr_images[i, :, :, :],
                             os.path.join(
                                 images_save_folder,
                                 f"epoch_{epoch}_SR_{i_batch + i}.png",
@@ -334,12 +339,8 @@ class SRResNet(SuperResolutionModelBase):
                         )
 
                 # Compute PSNR and SSIM
-                hr_images = (
-                    255.0 * (1.0 + hr_images) / 2.0
-                )  # Map from [-1, 1] to [0, 255]
-                sr_images = (
-                    255.0 * (1.0 + sr_images) / 2.0
-                )  # Map from [-1, 1] to [0, 255]
+                hr_images *= 255.0  # Map from [0, 1] to [0, 255]
+                sr_images *= 255.0  # Map from [0, 1] to [0, 255]
 
                 # Use Y channel only (luminance) to compute PSNR and SSIM (RGB to YCbCr conversion)
                 sr_Y = (
