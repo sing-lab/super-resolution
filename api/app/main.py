@@ -1,5 +1,5 @@
 """Main module to run the demo app."""
-from io import BytesIO
+from pathlib import Path
 
 from PIL import Image
 import streamlit as st
@@ -13,19 +13,23 @@ if __name__ == "__main__":
     uploaded_file = st.file_uploader("Choose an image")
 
     if uploaded_file is not None:
-        image = Image.open(uploaded_file).convert("RGB")
-        image.filename = uploaded_file.name
-        st.image(image, caption="Original image", use_column_width="always")
+        input_image = Image.open(uploaded_file).convert("RGB")
+        input_image.filename = uploaded_file.name
+        st.image(input_image, caption="Original image", use_column_width="always")
 
         if st.button("Process image"):
-            sr_image = get_prediction(image)
+            output_image_path = get_prediction(input_image)  # Predicted as "jpg".
+            output_image = Image.open(output_image_path).convert("RGB")
+
             st.image(
-                sr_image, caption="Super resolution image", use_column_width="always"
+                output_image,
+                caption="Super resolution image",
+                use_column_width="always",
             )
 
             image_comparison(
-                img1=image.convert("RGB"),
-                img2=sr_image.convert("RGB"),
+                img1=input_image,
+                img2=output_image,
                 label1="Original image",
                 label2="Super resolution image",
                 width=700,
@@ -35,13 +39,12 @@ if __name__ == "__main__":
                 in_memory=True,
             )
 
-            buf = BytesIO()
-            sr_image.save(buf, format="PNG")
-            byte_image = buf.getvalue()
+            with open(output_image_path, "rb") as f:
+                image_bytes = f.read()
 
             download_button = st.download_button(
                 label="Download image",
-                data=byte_image,
-                file_name=f"{uploaded_file.name}",
-                mime="image/png",
+                data=image_bytes,
+                file_name=f"{Path(uploaded_file.name).stem}.jpg",
+                mime="image/jpeg",
             )

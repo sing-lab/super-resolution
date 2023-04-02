@@ -503,6 +503,7 @@ class SRGAN(SuperResolutionModelBase):
         tile_overlap: Optional[int] = None,
         tile_batch_size: Optional[int] = None,
         scaling_factor: int = 4,
+        save_format: str = "png",
     ) -> None:
         """
         Process an image into super resolution.
@@ -530,6 +531,8 @@ class SRGAN(SuperResolutionModelBase):
             Overlap pixels between tiles.
         scaling_factor: int
             The scaling factor to use when downscaling high resolution images into low resolution images.
+        save_format: str
+            The format used to save super resolved images. PNG for lossless, "jpg" for smaller files.
 
         Raises
         ------
@@ -632,8 +635,9 @@ class SRGAN(SuperResolutionModelBase):
                     for i in range(sr_images.size(0)):
                         save_image(
                             sr_images[i, :, :, :],
-                            os.path.join(images_save_folder, f"{i_batch + i}.png"),
-                            format="PNG",
+                            os.path.join(
+                                images_save_folder, f"{i_batch + i}.{save_format}"
+                            ),
                         )
 
                 print(
