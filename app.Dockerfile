@@ -12,7 +12,7 @@ ENV PYTHONUNBUFFERED=1 \
     \
     # POETRY
     # https://python-poetry.org/docs/configuration/#using-environment-variables
-    POETRY_VERSION=1.2.1 \
+    POETRY_VERSION=1.4.2 \
     # Install poetry to this location
     POETRY_HOME="/opt/poetry" \
     # make poetry create the virtual environment in the project's root
@@ -37,14 +37,13 @@ RUN apt-get update \
         # deps for building python deps
         build-essential
 
-# install poetry - respects $POETRY_VERSION & $POETRY_HOME
+# Install poetry - respects $POETRY_VERSION & $POETRY_HOME
 RUN curl -sSL https://install.python-poetry.org | python3 -
 
 # Copy requirements
 COPY poetry.lock pyproject.toml ./
 
-RUN poetry install --no-root  # No project's package
-
+RUN poetry install
 
 # Stage 3: `production` image used for runtime
 FROM python-base as production
@@ -58,9 +57,6 @@ COPY src/super_resolution src/super_resolution
 
 # Copy demo
 COPY api/app /app
-
-# Copy models
-COPY models /models
 
 # Copy app config
 COPY .streamlit /.streamlit

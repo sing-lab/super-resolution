@@ -5,6 +5,8 @@ services:
     build:
       context: .
       dockerfile: app.Dockerfile
+    volumes:  # Local_folder: Container_folder
+      - ./models:/models  # Models folder
     command: > # Run demo app
             sh -c "streamlit run app/main.py"
     container_name: app
@@ -26,7 +28,7 @@ services:
       - ./data:/data  # Dataset folder
       - ./logs:/logs  # Experiment logs folder
       - ./models:/models  # Models folder
-      - ./configs:/configs  # Models folder
+      - ./configs:/configs  # Configs folder
     ipc: host # Increase the shared memory size for the container
     container_name: main_project
     deploy:
