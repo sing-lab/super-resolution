@@ -125,6 +125,7 @@ class SuperResolutionData(Dataset):
                 (
                     original_height - original_height % self.scaling_factor,
                     original_width - original_width % self.scaling_factor,
+                    1024,
                 )
             )
             transform_hr = Compose(
